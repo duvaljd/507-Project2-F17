@@ -11,7 +11,6 @@ import unittest
 
 ## (DO NOT change the name of this file! Make sure to re-save it with the name si507f17_project2_objects_code.py if you change the name. Otherwise, we will not be able to grade it!)
 
-
 print("\n*** *** PROJECT 2 *** ***\n")
 
 ## Useful additional references for this part of the homework from outside class material:
@@ -69,7 +68,6 @@ def sample_get_cache_itunes_data(search_term,media_term="all"):
 ## [PROBLEM 1] [250 POINTS]
 print("\n***** PROBLEM 1 *****\n")
 
-
 ## For problem 1, you should define a class Media, representing ANY piece of media you can find on iTunes search. 
 
 
@@ -86,7 +84,26 @@ print("\n***** PROBLEM 1 *****\n")
 ## - a special len method, which, for the Media class, returns 0 no matter what. (The length of an audiobook might mean something different from the length of a song, depending on how you want to define them!)
 ## - a special contains method (for the in operator) which takes one additional input, as all contains methods must, which should always be a string, and checks to see if the string input to this contains method is INSIDE the string representing the title of this piece of media (the title instance variable)
 
+class Media(object):
+	def __init__(self, dxn):
+		self.dxn = dxn
+		self.title = dxn["trackName"]
+		self.author = dxn["artistName"]
+		self.itunes_URL = dxn["trackViewUrl"]
+		self.itunes_id = dxn["trackId"]
 
+	def __str__(self):
+		return "{} by {}".format(self.title, self.author)
+
+	def __repr__(self):
+		return "ITUNES MEDIA: {}".format(self.itunes_id)
+
+	def __len__(self):
+		return 0
+
+	def __contains__(self,isThisHere):
+		if str(isThisHere).lower() in self.title.lower():
+			return True
 
 ## [PROBLEM 2] [400 POINTS]
 print("\n***** PROBLEM 2 *****\n")
@@ -109,7 +126,17 @@ print("\n***** PROBLEM 2 *****\n")
 
 ## Should have the len method overridden to return the number of seconds in the song. (HINT: The data supplies number of milliseconds in the song... How can you access that data and convert it to seconds?)
 
+class Song(Media):
+	def __init__(self, dxn):
+		super().__init__(dxn)
+		self.album = self.dxn["collectionName"]
+		self.track_number = self.dxn["trackNumber"]
+		self.genre = self.dxn["primaryGenreName"]
 
+	def __len__(self):
+		millis = int(self.dxn.get("trackTimeMillis", 0))
+		seconds = int(millis) / int(1000)
+		return int(seconds)
 
 ### class Movie:
 
@@ -123,7 +150,21 @@ print("\n***** PROBLEM 2 *****\n")
 
 ## Should have an additional method called title_words_num that returns an integer representing the number of words in the movie description. If there is no movie description, this method should return 0.
 
+class Movie(Media):
+	def __init__(self, dxn):
+		super().__init__(dxn)
+		self.rating = self.dxn["contentAdvisoryRating"]
+		self.genre = self.dxn["primaryGenreName"]
+		self.description = self.dxn["longDescription"].encode('utf-8', 'ignore')
 
+	def __len__(self):
+		millis = int(self.dxn.get("trackTimeMillis", 0))
+		seconds = int(millis) / int(1000)
+		minutes = int(seconds) / int(60)
+		return int(minutes)
+
+	def title_words_num(self):
+		return len(self.description.split())
 
 ## [PROBLEM 3] [150 POINTS]
 print("\n***** PROBLEM 3 *****\n")
@@ -135,11 +176,26 @@ print("\n***** PROBLEM 3 *****\n")
 ## NOTE: (The first time you run this file, data will be cached, so the data saved in each variable will be the same each time you run the file, as long as you do not delete your cached data.)
 
 media_samples = sample_get_cache_itunes_data("love")["results"]
-
 song_samples = sample_get_cache_itunes_data("love","music")["results"]
-
 movie_samples = sample_get_cache_itunes_data("love","movie")["results"]
 
+# search_data1 = sample_get_cache_itunes_data("the beatles")["results"]
+# search_data2 = sample_get_cache_itunes_data("ratatouille")["results"]
+
+# songdata1 = search_data1[0]
+# songdata2 = search_data1[1]
+# movie1 = search_data2[0]
+
+# movie_sample = Movie(movie1)
+# song_sample1 = Song(songdata1)
+# song_sample2 = Song(songdata2)
+
+# print(movie_sample)
+# print(song_sample2)
+# print(song_sample1)
+
+# print("Come" in song_sample1)
+# print("Come" in song_sample2)
 
 ## You may want to do some investigation on these variables to make sure you understand correctly what type of value they hold, what's in each one!
 
@@ -150,9 +206,17 @@ movie_samples = sample_get_cache_itunes_data("love","movie")["results"]
 ## a list of Movie objects saved in a variable movie_list.
 
 ## You may use any method of accumulation to make that happen.
+media_list = []
+for item in media_samples:
+	media_list.append(Media(item))
 
+song_list = []
+for item in song_samples:
+	song_list.append(Song(item))
 
-
+movie_list = []
+for item in movie_samples:
+	movie_list.append(Movie(item))
 
 ## [PROBLEM 4] [200 POINTS]
 print("\n***** PROBLEM 4 *****\n")
@@ -183,8 +247,16 @@ print("\n***** PROBLEM 4 *****\n")
 
 ## HINT #4: Write or draw out your plan for this before you actually start writing the code! That will make it much easier.
 
+def writeMedia(instanceList, fileName="sample.csv"):
+	outfile = open(fileName, "w")
+	outfile.write("title, artist, id, url, length\n")
+	for item in instanceList:
+		item.title = "\"" + item.title + "\""
+		outfile.write("{}, {}, {}, {}, {}\n".format(item.title, item.author, item.itunes_id, item.itunes_URL, len(item)))
 
-
+writeMedia(media_list, "media.csv")
+writeMedia(song_list, "songs.csv")
+writeMedia(movie_list, "movies.csv")
 
 
 
